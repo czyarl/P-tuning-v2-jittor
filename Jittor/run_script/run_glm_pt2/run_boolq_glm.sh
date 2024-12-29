@@ -3,7 +3,7 @@ export DATASET_NAME=boolq
 export CUDA_VISIBLE_DEVICES=0
 
 # bs=32
-bs=4
+bs=1
 lr=9e-3
 dropout=0.1
 psl=8

@@ -9,8 +9,8 @@ random.shuffle(data)
 split_point = int(len(data)*0.8)
 eval_data = data[split_point:]
 train_data = data[:split_point]
-eval_data = data[-200:]
-train_data = data[:2]
+# eval_data = data[-20:]
+# train_data = data[:20]
 print(f"eval_data len = {len(eval_data)}")
 print(f"train_data len = {len(train_data)}")
 

@@ -3,7 +3,7 @@ export DATASET_NAME=record
 export CUDA_VISIBLE_DEVICES=0
 
 # bs=32
-bs=4
+bs=1
 lr=7e-3
 dropout=0.1
 # psl=8
@@ -16,7 +16,7 @@ python3 run.py \
   --dataset_name $DATASET_NAME \
   --do_train \
   --do_eval \
-  --max_seq_length 128 \
+  --max_seq_length 256 \
   --per_device_train_batch_size $bs \
   --learning_rate $lr \
   --num_train_epochs $epoch \
@@ -26,6 +26,8 @@ python3 run.py \
   --hidden_dropout_prob $dropout \
   --seed 11 \
   --save_strategy no \
-  --evaluation_strategy epoch \
+  --evaluation_strategy steps \
+  --eval_steps 500 \
+  --max_eval_samples 2000 \
   --prefix \
   --fp16

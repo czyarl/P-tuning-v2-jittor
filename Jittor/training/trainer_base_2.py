@@ -43,9 +43,9 @@ class BaseTrainer:
         # for param in model.parameters():
         #     if param.dtype == torch.float16:
         #         print(f"param.dtype = {param.dtype}!!!WAWAWWAAWAWWAAWAW")
-        print('----BaseTrainer-------')
-        print(type(model.parameters()))
-        print(type(model))
+        # print('----BaseTrainer-------')
+        # print(type(model.parameters()))
+        # print(type(model))
         # tmp = list(model.parameters())
         # print(type(tmp))
         # print(tmp, file = open('tmp1.txt', 'w'))
@@ -72,10 +72,8 @@ class BaseTrainer:
         })
     
     def evaluate(self, ignore_keys_for_eval=None):
-        # 初始化评估结果字典
         eval_results = {}
 
-        # 设置评估数据加载器
         eval_dataloader = DataLoader(
             self.eval_dataset,
             # sampler=RandomSampler(self.eval_dataset),
@@ -87,20 +85,15 @@ class BaseTrainer:
             # pin_memory=self.args.dataloader_pin_memory,
         )
 
-        # 初始化用来保存参考标签和预测标签
         references = []
         predictions = []
 
-        # 将模型设置为评估模式
         self.model.eval()
 
-        # 计数器，用于限制评估的批次数
-        cnt = 0
         total_loss = 0.0
         total_batches = 0
 
-        # 遍历评估数据集中的每个批次
-        for batch in eval_dataloader:
+        for batch in tqdm(eval_dataloader, desc=f"Evaluating"):
             input_ids = batch["input_ids"].to(self.model.device)
             labels = batch["labels"].to(self.model.device)
             attention_mask = batch["attention_mask"].to(self.model.device)
@@ -109,30 +102,23 @@ class BaseTrainer:
                 # print("token_type_ids")
                 token_type_ids = batch["token_type_ids"].to(self.device)
 
-            # 使用模型计算输出，并获取损失值
             with torch.no_grad():
                 outputs = self.model(input_ids, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids)
                 loss = outputs.loss
                 logits = outputs.logits
-
             total_loss += loss.item()
             total_batches += 1
-
-            # 获取预测的标签，这里使用 argmax 来获取每个样本的预测类别
-            predicted_labels = logits.argmax(dim=-1)  # 取最大概率的标签
 
             # 将真实标签和预测标签添加到列表中
             references.extend(labels.cpu().numpy())  # 转换为 CPU 和 numpy 数组
             predictions.extend(logits.cpu().numpy())  # 转换为 CPU 和 numpy 数组
 
-        # 计算平均损失
         avg_loss = total_loss / total_batches if total_batches > 0 else 0.0
         eval_results["eval_loss"] = avg_loss
 
-        # 如果有指定的 metric 函数，计算并添加到评估结果中（如 accuracy, f1 等）
         if self.compute_metrics is not None:
             eval_prediction = EvalPrediction(predictions=predictions, label_ids=references)
-            metrics = self.compute_metrics(eval_prediction)  # 传递 EvalPrediction 对象
+            metrics = self.compute_metrics(eval_prediction) 
             eval_results.update({f"eval_{key}": value for key, value in metrics.items()})
             print(f"111: {eval_results}")
 
@@ -166,11 +152,11 @@ class BaseTrainer:
                 token_type_ids = batch["token_type_ids"].to(self.device)
             # print(input_ids.shape)
             # print(attention_mask.shape)
-            # print(input_ids[:1])
+            print(input_ids[:1])
             generated_ids = self.model.generate(
                 input_ids,
                 attention_mask=attention_mask, 
-                token_type_ids=token_type_ids, 
+                # token_type_ids=token_type_ids, 
                 max_new_tokens=70,
                 num_return_sequences=1,
                 do_sample=False, 
@@ -331,6 +317,8 @@ class BaseTrainer:
         for epoch in range(num_epochs):
             self.model.train()
             running_loss = 0.0
+            running_item = 0
+            cnt = 0
             for batch in tqdm(train_dataloader, desc=f"Training Epoch {epoch + 1}"):
                 input_ids = batch["input_ids"].to(self.device)
                 labels = batch["labels"].to(self.device)
@@ -360,17 +348,29 @@ class BaseTrainer:
                     self.optimizer.step(loss)
 
                 running_loss += loss.item()
+                running_item += 1
+                
+                cnt += 1
+                if self.args.evaluation_strategy == "steps":
+                    if cnt % self.args.eval_steps == 0:
+                        self._maybe_log_save_evaluate(
+                            tr_loss=running_loss,
+                            model=self.model,
+                            trial=None,  # If using hyperparameter search, pass the trial here
+                            epoch=epoch+cnt/len(train_dataloader),
+                            ignore_keys_for_eval=None
+                        )
 
             avg_train_loss = running_loss / len(train_dataloader)
             logger.info(f"Epoch {epoch + 1}/{num_epochs}, Avg Training Loss: {avg_train_loss:.4f}")
 
-            # Call _maybe_log_save_evaluate at the end of each epoch
-            self._maybe_log_save_evaluate(
-                tr_loss=running_loss,
-                model=self.model,
-                trial=None,  # If using hyperparameter search, pass the trial here
-                epoch=epoch,
-                ignore_keys_for_eval=None
-            )
+            if self.args.evaluation_strategy == "epoch":
+                self._maybe_log_save_evaluate(
+                    tr_loss=running_loss,
+                    model=self.model,
+                    trial=None,  # If using hyperparameter search, pass the trial here
+                    epoch=epoch,
+                    ignore_keys_for_eval=None
+                )
 
         return self.best_metrics

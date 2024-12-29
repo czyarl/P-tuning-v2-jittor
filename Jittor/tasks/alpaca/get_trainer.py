@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
 
 import torch
+import jittor
 import transformers
 from tasks.alpaca import utils
 from torch.utils.data import Dataset
@@ -112,7 +113,10 @@ def remove_eos_token(input_ids_list: list, eos_token_id: int) -> list:
     # Iterate over the list of input_ids
     for input_ids in input_ids_list:
         eos_mask = (input_ids == eos_token_id)  # Create a mask to find EOS tokens
-        eos_pos = eos_mask.nonzero(as_tuple=False)  # Find positions of EOS token
+        if isinstance(eos_mask, jittor.Var):
+            eos_pos = eos_mask.nonzero()  # Find positions of EOS token
+        else: 
+            eos_pos = eos_mask.nonzero(as_tuple=False)  # Find positions of EOS token
 
         if eos_pos.size(0) > 0:
             first_eos_pos = eos_pos[0, 0].item()  # Get the position of the first EOS token
@@ -169,9 +173,9 @@ class SupervisedDataset(Dataset):
         data_dict = preprocess(sources, targets, tokenizer, used_for_training)
 
         self.input_ids = data_dict["input_ids"]
-        print(len(self.input_ids))
+        # print(self.input_ids[0:2])
         self.labels = data_dict["labels"]
-        # print(self.labels[:10])
+        # print(self.labels[:2])
 
     def __len__(self):
         return len(self.input_ids)
@@ -201,24 +205,27 @@ class DataCollatorForSupervisedDataset(object):
             # print(f"input_lengths = {input_lengths}")
             # print(f"label_lengths = {label_lengths}")
             padded_input_ids = [
-                torch.cat([seq, torch.full((max_input_length - len(seq),), self.tokenizer.pad_token_id)])
+                torch.cat([seq, torch.full((max_input_length - len(seq),), self.tokenizer.pad_token_id, dtype=jittor.int32)])
                 for seq in input_ids
             ]
             padded_labels = [
-                torch.cat([seq, torch.full((max_label_length - len(seq),), IGNORE_INDEX)])
+                torch.cat([seq, torch.full((max_label_length - len(seq),), IGNORE_INDEX, dtype=jittor.int32)])
                 for seq in labels
             ]
         elif self.padding_side == "left":
             padded_input_ids = [
-                torch.cat([torch.full((max_input_length - len(seq),), self.tokenizer.pad_token_id), seq])
+                torch.cat([torch.full((max_input_length - len(seq),), self.tokenizer.pad_token_id, dtype=jittor.int32), seq])
                 for seq in input_ids
             ]
             padded_labels = [
-                torch.cat([torch.full((max_label_length - len(seq),), IGNORE_INDEX), seq])
+                torch.cat([torch.full((max_label_length - len(seq),), IGNORE_INDEX, dtype=jittor.int32), seq])
                 for seq in labels
             ]
         else:
             raise ValueError("padding_side must be 'left' or 'right'")
+
+        # print(padded_input_ids[:2])
+        # input()
 
         input_ids = torch.stack(padded_input_ids)
         labels = torch.stack(padded_labels)

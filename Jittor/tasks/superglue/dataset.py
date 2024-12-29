@@ -102,8 +102,8 @@ class SuperGlueDataset():
 
         if data_args.pad_to_max_length:
             self.data_collator = self.custom_collate_fn
-            # if data_args.dataset_name != "multirc": 
-            #     self.data_collator = default_data_collator
+            if data_args.dataset_name == "copa": 
+                self.data_collator = default_data_collator
         elif training_args.fp16:
             self.data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8)
 
@@ -112,30 +112,27 @@ class SuperGlueDataset():
     def custom_collate_fn(self, batch):
         # if self.data_collator is not None: 
         #     return self.data_collator(batch)
+        # print(batch)
+        # input()
         
         collated_batch = {}
 
         for key in batch[0]:
             if isinstance(batch[0][key], (list, tuple, torch.Tensor, int)):
-                try:
+                # try:
                     if key == 'label': actual_key = 'labels'
                     else: actual_key = key
+                    if isinstance(batch[0][key], list):
+                        if isinstance(batch[0][key][0], str): 
+                            continue
                     if len(torch.tensor(batch[0][key]).shape) > 1: 
                         assert False, "batch item dim too much"
                         collated_batch[actual_key] = torch.cat([torch.tensor(item[key], dtype=torch.long) for item in batch])
-                    elif not isinstance(batch[0][key], list): 
-                        collated_batch[actual_key] = torch.tensor([item[key] for item in batch])
-                    else: 
-                        max_len = max([len(item[key]) for item in batch])
-                        pad_num = self.tokenizer.pad_token_id if key == 'input_ids' else 0
-                        for item in batch:
-                            item[key] = item[key] + [pad_num]*(max_len-len(item[key]))
-                        collated_batch[actual_key] = torch.tensor([item[key] for item in batch])
-                except Exception as e:
-                    print([item[key] for item in batch])
-                    print([len(item[key]) for item in batch])
-                    input()
-                    pass
+                    else:
+                        collated_batch[actual_key] = torch.tensor([item[key] for item in batch], dtype=torch.long)
+                # except Exception as e:
+                #     print(f"Skipping field {key} due to error: {e}")
+                #     pass
             else:
                 # print(f"Skipping non-tensor field: {key}, {type(batch[0][key])}")
                 pass
@@ -253,7 +250,7 @@ class SuperGlueDataset():
             "question_id": list(),
             "input_ids": list(),
             "attention_mask": list(),
-            "token_type_ids": list(),
+            # "token_type_ids": list(),
             "label": list(),
             "entity": list(),
             "answers": list()
@@ -268,13 +265,21 @@ class SuperGlueDataset():
                 result = self.tokenizer(passage, question, padding=self.padding, max_length=self.max_seq_length, truncation=True)
                 label = 1 if ent in answers else 0
 
-                results["input_ids"].append(result["input_ids"])
-                results["attention_mask"].append(result["attention_mask"])
-                if "token_type_ids" in result: results["token_type_ids"].append(result["token_type_ids"])
-                results["label"].append(label)
-                results["index"].append(index)
-                results["question_id"].append(index["query"])
-                results["entity"].append(ent)
-                results["answers"].append(answers)
+                cnt = 1
+                if label == 1 and split == "train": cnt = 8
+                # print(cnt)
+                # input()
+                for _ in range(cnt):
+                    results["input_ids"].append(result["input_ids"])
+                    results["attention_mask"].append(result["attention_mask"])
+                    if "token_type_ids" in result: results["token_type_ids"].append(result["token_type_ids"])
+                    results["label"].append(label)
+                    results["index"].append(index)
+                    results["question_id"].append(index["query"])
+                    results["entity"].append(ent)
+                    results["answers"].append(answers)
+                # print(results["input_ids"])
+                # print(results["label"])
+                # input()
 
         return results
