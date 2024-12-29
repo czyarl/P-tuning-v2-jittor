@@ -1,6 +1,6 @@
 # Reproduction of P-tuning-v2 on RoBERTa, GLM and GPT
 
-This is the reproduction version readme, modified from the original version. 
+This is the reproduction version of [P-tuning-v2](https://arxiv.org/abs/2110.07602), modified from the original version. 
 
 This folder contains the PyTorch & Jittor version of the reproduction code. 
 
