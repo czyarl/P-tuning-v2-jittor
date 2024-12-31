@@ -38,7 +38,7 @@ First, you should enter the folder `Jittor/`.
 
 这一块尚在施工中。我们正在努力写出一个环境配置指南，包含(1)环境配置步骤，以及(2)对我们对环境做的改动的具体解释。
 
-这份环境配置指南也将发布到 Jittor 社区中。
+这份环境配置指南也将发布到 Jittor 社区中。目前发布在了 [Jittor 社区](https://discuss.jittor.org/t/topic/905) 
 
 ### Training
 
