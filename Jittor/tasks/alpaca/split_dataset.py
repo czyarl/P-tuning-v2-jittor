@@ -5,6 +5,7 @@ import random
 with open("alpaca_data.json", "r") as f:
     data = json.load(f)
 
+random.seed(42)
 random.shuffle(data)
 split_point = int(len(data)*0.8)
 eval_data = data[split_point:]

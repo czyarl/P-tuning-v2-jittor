@@ -1,6 +1,6 @@
 # Reproduction of P-tuning-v2 on RoBERTa, GLM and GPT
 
-This is the reproduction version of [P-tuning-v2](https://arxiv.org/abs/2110.07602), modified from the original version. 
+This is the reproduction version of [P-tuning-v2](https://arxiv.org/abs/2110.07602), modified from the [official code](https://github.com/THUDM/P-tuning-v2). 
 
 This folder contains the PyTorch & Jittor version of the reproduction code. 
 
@@ -32,7 +32,23 @@ bash run_script/run_roberta_pt2/run_boolq_roberta.sh
 
 ## Jittor
 
+First, you should enter the folder `Jittor/`. 
 
+### Setup
+
+这一块尚在施工中。我们正在努力写出一个环境配置指南，包含(1)环境配置步骤，以及(2)对我们对环境做的改动的具体解释。
+
+这份环境配置指南也将发布到 Jittor 社区中。
+
+### Training
+
+For example, you shall run: 
+
+```shell
+bash run_script/run_roberta_pt2/run_boolq_roberta.sh
+```
+
+You'll probably see `jit_utils updated, please rerun your command.` when you run the script for the first time, just ignore it and rerun. 
 
 ## Note
 
