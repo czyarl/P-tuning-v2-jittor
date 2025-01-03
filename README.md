@@ -40,9 +40,20 @@ First, you should enter the folder `Jittor/`.
 
 这份环境配置指南也将发布到 Jittor 社区中。目前发布在了 [Jittor 社区](https://discuss.jittor.org/t/topic/905) 
 
+update:
+
+已经在库中附带了 jtorch 和 transformers 的改动后版本，直接执行如下指令：
+
+```shell
+conda create -n final_jittor python=3.8
+conda activate final_jittor
+pip install jtorch_modified/. transformers_jittor_modified/.
+pip install datasets==2.3.2 scikit-learn==1.3.2
+```
+
 ### Training
 
-For example, you shall run: 
+For example, you shall run:
 
 ```shell
 bash run_script/run_roberta_pt2/run_boolq_roberta.sh
