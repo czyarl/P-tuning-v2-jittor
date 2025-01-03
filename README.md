@@ -19,7 +19,7 @@ To setup environment, you should:
 ```shell
 conda create -n final_pytorch python=3.8
 conda activate final_pytorch
-pip install torch==2.4.1 numpy==1.24.4 transformers==4.26.1 nltk==3.9.1 rouge-score==0.1.2 datasets==2.3.2 scikit-learn==1.3.2
+pip install torch==2.4.1 numpy==1.24.4 transformers==4.26.1 nltk==3.9.1 rouge-score==0.1.2 datasets==2.3.2 scikit-learn==1.3.2 safetensors
 ```
 
 ### Training
@@ -48,7 +48,7 @@ update:
 conda create -n final_jittor python=3.8
 conda activate final_jittor
 pip install jtorch_modified/. transformers_jittor_modified/.
-pip install datasets==2.3.2 scikit-learn==1.3.2
+pip install datasets==2.3.2 scikit-learn==1.3.2 safetensors
 ```
 
 ### Training
@@ -60,6 +60,8 @@ bash run_script/run_roberta_pt2/run_boolq_roberta.sh
 ```
 
 You'll probably see `jit_utils updated, please rerun your command.` when you run the script for the first time, just ignore it and rerun. 
+
+In addition, you can adjust `batch_size` to fit your memory, in `run_script/run_roberta_pt2/*.sh`.
 
 ## Note
 
